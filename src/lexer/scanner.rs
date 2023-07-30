@@ -192,11 +192,6 @@ impl<'a> Scanner<'a> {
         self.source[self.current]
     }
 
-    // can panic if current == source.len - 1
-    fn peek_next(&self) -> u8 {
-        self.source[self.current + 1]
-    }
-
     fn if_next(&self, byte: u8) -> bool {
         self.peek() == byte
     }
@@ -218,16 +213,6 @@ impl<'a> Scanner<'a> {
                 continue;
             }
             break;
-        }
-    }
-
-    fn skip_whitespace(&mut self) {
-        loop {
-            let byte = self.peek();
-            if byte != b' ' && byte != b'\t' && byte != b'\r' {
-                break;
-            }
-            self.advance();
         }
     }
 
