@@ -45,7 +45,7 @@ impl<'a> Scanner<'a> {
         self.skip();
 
         if self.is_at_end() {
-            return Self::make_token(TokenType::Eof);
+            return self.make_token(TokenType::Eof);
         }
 
         self.start = self.current;
@@ -53,46 +53,46 @@ impl<'a> Scanner<'a> {
         let byte = self.advance();
         match byte {
             // single character tokens
-            b'(' => Self::make_token(TokenType::LParen),
-            b')' => Self::make_token(TokenType::RParen),
-            b'{' => Self::make_token(TokenType::LBrace),
-            b'}' => Self::make_token(TokenType::RBrace),
-            b'[' => Self::make_token(TokenType::LBracket),
-            b']' => Self::make_token(TokenType::RBracket),
-            b'.' => Self::make_token(TokenType::Dot),
-            b'+' => Self::make_token(TokenType::Plus),
-            b'-' => Self::make_token(TokenType::Minus),
-            b'*' => Self::make_token(TokenType::Asterisk),
-            b'/' => Self::make_token(TokenType::Slash),
-            b',' => Self::make_token(TokenType::Comma),
+            b'(' => self.make_token(TokenType::LParen),
+            b')' => self.make_token(TokenType::RParen),
+            b'{' => self.make_token(TokenType::LBrace),
+            b'}' => self.make_token(TokenType::RBrace),
+            b'[' => self.make_token(TokenType::LBracket),
+            b']' => self.make_token(TokenType::RBracket),
+            b'.' => self.make_token(TokenType::Dot),
+            b'+' => self.make_token(TokenType::Plus),
+            b'-' => self.make_token(TokenType::Minus),
+            b'*' => self.make_token(TokenType::Asterisk),
+            b'/' => self.make_token(TokenType::Slash),
+            b',' => self.make_token(TokenType::Comma),
 
             // double characters
             b'=' => {
                 if self.if_next(b'=') {
-                    Self::make_token(TokenType::EqualEqual)
+                    self.make_token(TokenType::EqualEqual)
                 } else {
-                    Self::make_token(TokenType::Equal)
+                    self.make_token(TokenType::Equal)
                 }
             }
             b'!' => {
                 if self.if_next(b'=') {
-                    Self::make_token(TokenType::BangEqual)
+                    self.make_token(TokenType::BangEqual)
                 } else {
-                    Self::make_token(TokenType::Bang)
+                    self.make_token(TokenType::Bang)
                 }
             }
             b'>' => {
                 if self.if_next(b'=') {
-                    Self::make_token(TokenType::GreaterEqual)
+                    self.make_token(TokenType::GreaterEqual)
                 } else {
-                    Self::make_token(TokenType::Greater)
+                    self.make_token(TokenType::Greater)
                 }
             }
             b'<' => {
                 if self.if_next(b'=') {
-                    Self::make_token(TokenType::LessEqual)
+                    self.make_token(TokenType::LessEqual)
                 } else {
-                    Self::make_token(TokenType::Less)
+                    self.make_token(TokenType::Less)
                 }
             }
 
@@ -114,8 +114,8 @@ impl<'a> Scanner<'a> {
     }
 
     // this is just a thin wrapper that will always return Ok
-    fn make_token(token_type: TokenType) -> Result {
-        Ok(Token::new(token_type))
+    fn make_token(&self, token_type: TokenType) -> Result {
+        Ok(Token::new(token_type, self.line))
     }
 
     fn string(&mut self) -> Result {
@@ -132,9 +132,9 @@ impl<'a> Scanner<'a> {
         }
         self.advance();
 
-        Ok(Token::new(TokenType::Str(unsafe {
+        self.make_token(TokenType::Str(unsafe {
             String::from_utf8_unchecked(self.source[self.start + 1..self.current - 1].to_vec())
-        })))
+        }))
     }
 
     fn num(&mut self) -> Result {
@@ -153,11 +153,11 @@ impl<'a> Scanner<'a> {
             }
         }
 
-        Ok(Token::new(TokenType::Num(unsafe {
+        self.make_token(TokenType::Num(unsafe {
             std::str::from_utf8_unchecked(&self.source[self.start..self.current])
                 .parse()
                 .unwrap()
-        })))
+        }))
     }
 
     fn identifier(&mut self) -> Result {
@@ -168,9 +168,9 @@ impl<'a> Scanner<'a> {
         let ident =
             unsafe { std::str::from_utf8_unchecked(&self.source[self.start..self.current]) };
         if let Some(keyword) = KEYWORDS.get(ident) {
-            Self::make_token(keyword.clone())
+            self.make_token(keyword.clone())
         } else {
-            Self::make_token(TokenType::Identifier(ident.to_owned()))
+            self.make_token(TokenType::Identifier(ident.to_owned()))
         }
     }
 
