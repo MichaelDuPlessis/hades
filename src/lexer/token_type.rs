@@ -38,4 +38,5 @@ pub enum TokenType {
 
     // other
     Comma,
+    Eof,
 }

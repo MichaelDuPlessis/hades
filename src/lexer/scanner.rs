@@ -14,6 +14,7 @@ static KEYWORDS: once_cell::sync::Lazy<HashMap<&str, TokenType>> =
     });
 
 // for error handeling
+#[derive(Debug)]
 pub enum Error {
     UnrecognizedToken,
     UnterminatedString,
@@ -41,19 +42,15 @@ impl<'a> Scanner<'a> {
 
     pub fn scan_token(&mut self) -> Result {
         // skipping tokens we don't want to read
-        self.skip_whitespace();
-        self.skip_comment();
+        self.skip();
 
-        // doing line numbers
-        let byte = loop {
-            let byte = self.advance();
-            if byte != b'\n' {
-                break byte;
-            }
+        if self.is_at_end() {
+            return Self::make_token(TokenType::Eof);
+        }
 
-            self.line += 1;
-        };
+        self.start = self.current;
 
+        let byte = self.advance();
         match byte {
             // single character tokens
             b'(' => Self::make_token(TokenType::LParen),
@@ -65,6 +62,8 @@ impl<'a> Scanner<'a> {
             b'.' => Self::make_token(TokenType::Dot),
             b'+' => Self::make_token(TokenType::Plus),
             b'-' => Self::make_token(TokenType::Minus),
+            b'*' => Self::make_token(TokenType::Asterisk),
+            b'/' => Self::make_token(TokenType::Slash),
             b',' => Self::make_token(TokenType::Comma),
 
             // double characters
@@ -80,6 +79,20 @@ impl<'a> Scanner<'a> {
                     Self::make_token(TokenType::BangEqual)
                 } else {
                     Self::make_token(TokenType::Bang)
+                }
+            }
+            b'>' => {
+                if self.if_next(b'=') {
+                    Self::make_token(TokenType::GreaterEqual)
+                } else {
+                    Self::make_token(TokenType::Greater)
+                }
+            }
+            b'<' => {
+                if self.if_next(b'=') {
+                    Self::make_token(TokenType::LessEqual)
+                } else {
+                    Self::make_token(TokenType::Less)
                 }
             }
 
@@ -106,6 +119,7 @@ impl<'a> Scanner<'a> {
     }
 
     fn string(&mut self) -> Result {
+        self.advance();
         while self.peek() != b'"' {
             if self.is_at_end() {
                 return Err(Error::UnterminatedString);
@@ -116,6 +130,7 @@ impl<'a> Scanner<'a> {
                 self.line += 1;
             }
         }
+        self.advance();
 
         Ok(Token::new(TokenType::Str(unsafe {
             String::from_utf8_unchecked(self.source[self.start + 1..self.current - 1].to_vec())
@@ -123,17 +138,17 @@ impl<'a> Scanner<'a> {
     }
 
     fn num(&mut self) -> Result {
-        while self.peek_next().is_ascii_digit() {
+        while self.peek().is_ascii_digit() {
             self.advance();
         }
 
-        if self.peek_next() == b'.' {
+        if self.peek() == b'.' {
             self.advance();
-            if !self.peek_next().is_ascii_digit() {
+            if !self.peek().is_ascii_digit() {
                 return Err(Error::InvalidNumFormat);
             }
 
-            while self.peek_next().is_ascii_digit() {
+            while self.peek().is_ascii_digit() {
                 self.advance();
             }
         }
@@ -146,7 +161,7 @@ impl<'a> Scanner<'a> {
     }
 
     fn identifier(&mut self) -> Result {
-        while Self::valid_ident_chars(self.peek_next()) {
+        while !self.is_at_end() && Self::valid_ident_chars(self.peek()) {
             self.advance();
         }
 
@@ -160,7 +175,7 @@ impl<'a> Scanner<'a> {
     }
 
     fn valid_ident_chars(byte: u8) -> bool {
-        byte.is_ascii() || byte == b'_'
+        byte.is_ascii_alphabetic() || byte == b'_'
     }
 
     fn is_at_end(&self) -> bool {
@@ -186,10 +201,30 @@ impl<'a> Scanner<'a> {
         self.peek() == byte
     }
 
+    fn skip(&mut self) {
+        while !self.is_at_end() {
+            let byte = self.peek();
+            if byte == b'#' {
+                self.skip_comment();
+                continue;
+            }
+            if byte == b' ' || byte == b'\t' || byte == b'\r' {
+                self.advance();
+                continue;
+            }
+            if byte == b'\n' {
+                self.line += 1;
+                self.advance();
+                continue;
+            }
+            break;
+        }
+    }
+
     fn skip_whitespace(&mut self) {
         loop {
             let byte = self.peek();
-            if byte != b' ' && byte != b'\t' {
+            if byte != b' ' && byte != b'\t' && byte != b'\r' {
                 break;
             }
             self.advance();
@@ -199,6 +234,19 @@ impl<'a> Scanner<'a> {
     fn skip_comment(&mut self) {
         if self.peek() == b'#' {
             while self.advance() != b'\n' {}
+        }
+        self.line += 1;
+    }
+}
+
+impl Iterator for Scanner<'_> {
+    type Item = Result;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.is_at_end() {
+            None
+        } else {
+            Some(self.scan_token())
         }
     }
 }
