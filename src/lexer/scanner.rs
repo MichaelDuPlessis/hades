@@ -10,6 +10,8 @@ static KEYWORDS: once_cell::sync::Lazy<HashMap<&str, TokenType>> =
             ("if", TokenType::If),
             ("else", TokenType::Else),
             ("let", TokenType::Let),
+            ("true", TokenType::True),
+            ("false", TokenType::False),
         ])
     });
 

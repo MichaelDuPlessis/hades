@@ -15,6 +15,7 @@ pub enum TokenType {
     Asterisk,
     Slash,
     Dot,
+    Let,
 
     // Equality stuff
     EqualEqual,
@@ -29,7 +30,8 @@ pub enum TokenType {
     Identifier(String),
     Str(String),
     Num(f64), // maybe introduce two number type
-    Let,
+    True,
+    False,
 
     // Conditional
     While,
