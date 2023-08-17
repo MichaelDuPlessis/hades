@@ -70,33 +70,13 @@ impl<'a> Scanner<'a> {
 
             // double characters
             b'=' => {
-                if self.if_next(b'=') {
-                    self.make_token(TokenType::EqualEqual)
-                } else {
-                    self.make_token(TokenType::Equal)
-                }
+                self.make_token(self.choose_next(b'=', TokenType::EqualEqual, TokenType::Equal))
             }
-            b'!' => {
-                if self.if_next(b'=') {
-                    self.make_token(TokenType::BangEqual)
-                } else {
-                    self.make_token(TokenType::Bang)
-                }
-            }
+            b'!' => self.make_token(self.choose_next(b'=', TokenType::BangEqual, TokenType::Bang)),
             b'>' => {
-                if self.if_next(b'=') {
-                    self.make_token(TokenType::GreaterEqual)
-                } else {
-                    self.make_token(TokenType::Greater)
-                }
+                self.make_token(self.choose_next(b'=', TokenType::GreaterEqual, TokenType::Greater))
             }
-            b'<' => {
-                if self.if_next(b'=') {
-                    self.make_token(TokenType::LessEqual)
-                } else {
-                    self.make_token(TokenType::Less)
-                }
-            }
+            b'<' => self.make_token(self.choose_next(b'=', TokenType::LessEqual, TokenType::Less)),
 
             // strings
             b'"' => self.string(),
@@ -194,8 +174,12 @@ impl<'a> Scanner<'a> {
         self.source[self.current]
     }
 
-    fn if_next(&self, byte: u8) -> bool {
-        self.peek() == byte
+    fn choose_next(&self, byte: u8, t1: TokenType, t2: TokenType) -> TokenType {
+        if self.peek() == byte {
+            t1
+        } else {
+            t2
+        }
     }
 
     fn skip(&mut self) {
