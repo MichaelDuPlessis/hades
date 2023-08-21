@@ -1,18 +1,18 @@
-use std::ops::Index;
-
-use super::{common::Value, opcode::OpCode, value_array::ValueArray};
+use super::{common::Value, value_array::ValueArray};
 
 // this represents a chunk
 #[derive(Default)]
 pub struct Chunk {
-    code: Vec<OpCode>,
+    code: Vec<u8>,
+    lines: Vec<usize>,
     constants: ValueArray,
 }
 
 impl Chunk {
     // writes a byte to a chunk
-    pub fn write(&mut self, byte: OpCode) {
-        self.code.push(byte)
+    pub fn write(&mut self, byte: u8, line: usize) {
+        self.code.push(byte);
+        self.lines.push(line);
     }
 
     pub fn add_constant(&mut self, value: Value) -> usize {
@@ -31,20 +31,20 @@ impl Chunk {
     pub fn len(&self) -> usize {
         self.code.len()
     }
-}
 
-impl Index<usize> for Chunk {
-    type Output = OpCode;
+    pub fn index_code(&self, index: usize) -> u8 {
+        self.code[index]
+    }
 
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.code[index]
+    pub fn index_constants(&self, index: usize) -> Value {
+        self.constants[index]
     }
 }
 
 impl IntoIterator for Chunk {
-    type Item = <Vec<OpCode> as IntoIterator>::Item;
+    type Item = <Vec<u8> as IntoIterator>::Item;
 
-    type IntoIter = <Vec<OpCode> as IntoIterator>::IntoIter;
+    type IntoIter = <Vec<u8> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.code.into_iter()
@@ -52,9 +52,9 @@ impl IntoIterator for Chunk {
 }
 
 impl<'a> IntoIterator for &'a Chunk {
-    type Item = &'a <Vec<OpCode> as IntoIterator>::Item;
+    type Item = &'a <Vec<u8> as IntoIterator>::Item;
 
-    type IntoIter = <&'a Vec<OpCode> as IntoIterator>::IntoIter;
+    type IntoIter = <&'a Vec<u8> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.code.iter()
@@ -62,9 +62,9 @@ impl<'a> IntoIterator for &'a Chunk {
 }
 
 impl<'a> IntoIterator for &'a mut Chunk {
-    type Item = &'a mut <Vec<OpCode> as IntoIterator>::Item;
+    type Item = &'a mut <Vec<u8> as IntoIterator>::Item;
 
-    type IntoIter = <&'a mut Vec<OpCode> as IntoIterator>::IntoIter;
+    type IntoIter = <&'a mut Vec<u8> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.code.iter_mut()

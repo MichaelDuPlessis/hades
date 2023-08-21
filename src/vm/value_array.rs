@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use super::common::Value;
 
 #[derive(Default)]
@@ -10,5 +12,13 @@ impl ValueArray {
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+}
+
+impl Index<usize> for ValueArray {
+    type Output = Value;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }

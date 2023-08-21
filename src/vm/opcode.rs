@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, FromPrimitive, ToPrimitive)]
 pub enum OpCode {
     Constant,
     Return,

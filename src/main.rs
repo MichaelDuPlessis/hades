@@ -1,4 +1,9 @@
+#[macro_use]
+extern crate num_derive;
+
+use crate::vm::opcode::OpCode;
 use lexer::scanner::Scanner;
+use std::mem::size_of;
 
 mod lexer;
 mod parser;
@@ -11,4 +16,5 @@ fn main() {
     for token in scanner {
         dbg!(token.unwrap());
     }
+    println!("{}", size_of::<OpCode>())
 }
