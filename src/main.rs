@@ -2,6 +2,7 @@ use lexer::scanner::Scanner;
 
 mod lexer;
 mod parser;
+mod vm;
 
 fn main() {
     let source = std::fs::read("./test.hd").unwrap();
