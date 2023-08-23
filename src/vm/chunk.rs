@@ -10,8 +10,8 @@ pub struct Chunk {
 
 impl Chunk {
     // writes a byte to a chunk
-    pub fn write(&mut self, byte: u8, line: usize) {
-        self.code.push(byte);
+    pub fn write(&mut self, byte: impl Into<u8>, line: usize) {
+        self.code.push(byte.into());
         self.lines.push(line);
     }
 

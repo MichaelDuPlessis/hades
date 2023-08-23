@@ -2,19 +2,21 @@
 extern crate num_derive;
 
 use crate::vm::opcode::OpCode;
-use lexer::scanner::Scanner;
-use std::mem::size_of;
+use vm::{chunk::Chunk, dissamble_chunk, VM};
 
 mod lexer;
 mod parser;
 mod vm;
 
 fn main() {
-    let source = std::fs::read("./test.hd").unwrap();
-    // dbg!(&source);
-    let scanner = Scanner::new(&source);
-    for token in scanner {
-        dbg!(token.unwrap());
-    }
-    println!("{}", size_of::<OpCode>())
+    let mut chunk = Chunk::default();
+    let constant = chunk.add_constant(1.2);
+
+    chunk.write(OpCode::Constant, 123);
+    chunk.write(constant as u8, 123);
+    chunk.write(OpCode::Negate, 123);
+    chunk.write(OpCode::Return as u8, 123);
+
+    let mut vm = VM::new(&chunk);
+    let _ = vm.interpret();
 }
