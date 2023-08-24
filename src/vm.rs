@@ -28,20 +28,26 @@ pub type InterpretResult = Result<(), InterpretError>;
 pub struct VM<'a> {
     chunk: &'a Chunk, // the chunk of code to executee
     ip: usize,        // the next instruction to execute
+    source: &'a [u8], // the source code
     // recode to custom stack structure
     stack: Vec<Value>, // a stack holding values
 }
 
 impl<'a> VM<'a> {
-    pub fn new(chunk: &'a Chunk) -> Self {
+    pub fn new(chunk: &'a Chunk, source: impl Into<&'a [u8]>) -> Self {
         Self {
             chunk,
             ip: 0,
+            source: source.into(),
             stack: Vec::new(),
         }
     }
 
     pub fn interpret(&mut self) -> InterpretResult {
+        if !compile(self.source, self.chunk) {
+            return Err(InterpretError::CompileError);
+        }
+
         self.run()
     }
 

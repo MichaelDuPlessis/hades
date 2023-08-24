@@ -4,6 +4,7 @@ extern crate num_derive;
 use crate::vm::opcode::OpCode;
 use vm::{chunk::Chunk, dissamble_chunk, VM};
 
+mod compiler;
 mod lexer;
 mod parser;
 mod vm;

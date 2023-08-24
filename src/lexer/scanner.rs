@@ -33,9 +33,9 @@ pub struct Scanner<'a> {
 }
 
 impl<'a> Scanner<'a> {
-    pub fn new(source: &'a [u8]) -> Self {
+    pub fn new(source: impl Into<&'a [u8]>) -> Self {
         Self {
-            source,
+            source: source.into(),
             current: 0,
             start: 0,
             line: 1,
@@ -210,14 +210,56 @@ impl<'a> Scanner<'a> {
     }
 }
 
-impl Iterator for Scanner<'_> {
+// for consuming
+pub struct ScannerIntoIter<'a> {
+    scanner: Scanner<'a>,
+}
+
+impl<'a> IntoIterator for Scanner<'a> {
+    type Item = Result;
+
+    type IntoIter = ScannerIntoIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter { scanner: self }
+    }
+}
+
+impl Iterator for ScannerIntoIter<'_> {
     type Item = Result;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.is_at_end() {
+        if self.scanner.is_at_end() {
             None
         } else {
-            Some(self.scan_token())
+            Some(self.scanner.scan_token())
+        }
+    }
+}
+
+// for refs
+pub struct ScannerIter<'a> {
+    scanner: &'a Scanner<'a>,
+}
+
+impl<'a> IntoIterator for &'a Scanner<'a> {
+    type Item = &'a Result;
+
+    type IntoIter = ScannerIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter { scanner: self }
+    }
+}
+
+impl<'a> Iterator for ScannerIter<'a> {
+    type Item = &'a Result;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.scanner.is_at_end() {
+            None
+        } else {
+            Some(&self.scanner.scan_token())
         }
     }
 }
